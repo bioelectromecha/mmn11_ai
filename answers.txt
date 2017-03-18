@@ -1,0 +1,9 @@
+MMN 11:
+
+Q.1 - it's not the best possible solution. DFS returns the first solution it finds, not necessarily the shortest,
+    That's because it doesn't check all successor states from a given starting state.
+    As a consequence, in MediumMaze it misses a somewhat shorter path to the goal.
+
+Q.2 -
+
+Q.3 -
