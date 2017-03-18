@@ -7,3 +7,53 @@ Q.1 - it's not the best possible solution. DFS returns the first solution it fin
 Q.2 -
 
 Q.3 -
+
+Q.4 - It looks like A* with manhattan heuristic got the shortest path in the shortest time (compared to UCS and BFS).
+    On the other hand, DFS got a path in the overall shortest time, but the path it found was suboptimal.
+
+roman@roman-Inspiron-3543:~/PycharmProjects/search$ python pacman.py -l openMaze -p SearchAgent -a fn=ucs
+[SearchAgent] using function ucs
+[SearchAgent] using problem type PositionSearchProblem
+Path found with total cost of 54 in 0.2 seconds
+Search nodes expanded: 682
+Pacman emerges victorious! Score: 456
+Average Score: 456.0
+Scores:        456.0
+Win Rate:      1/1 (1.00)
+Record:        Win
+
+roman@roman-Inspiron-3543:~/PycharmProjects/search$ python pacman.py -l openMaze -z .5 -p SearchAgent -a fn=astar,heuristic=manhattanHeuristic
+[SearchAgent] using function astar and heuristic manhattanHeuristic
+[SearchAgent] using problem type PositionSearchProblem
+Path found with total cost of 54 in 0.1 seconds
+Search nodes expanded: 535
+Pacman emerges victorious! Score: 456
+Average Score: 456.0
+Scores:        456.0
+Win Rate:      1/1 (1.00)
+Record:        Win
+
+roman@roman-Inspiron-3543:~/PycharmProjects/search$ python pacman.py -l openMaze -p SearchAgent -a fn=bfs
+[SearchAgent] using function bfs
+[SearchAgent] using problem type PositionSearchProblem
+Path found with total cost of 54 in 0.0 seconds
+Search nodes expanded: 682
+Pacman emerges victorious! Score: 456
+Average Score: 456.0
+Scores:        456.0
+Win Rate:      1/1 (1.00)
+Record:        Win
+
+roman@roman-Inspiron-3543:~/PycharmProjects/search$ python pacman.py -l openMaze -p SearchAgent
+[SearchAgent] using function depthFirstSearch
+[SearchAgent] using problem type PositionSearchProblem
+Path found with total cost of 298 in 0.0 seconds
+Search nodes expanded: 576
+Pacman emerges victorious! Score: 212
+Average Score: 212.0
+Scores:        212.0
+Win Rate:      1/1 (1.00)
+Record:        Win
+
+
+

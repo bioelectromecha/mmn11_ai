@@ -122,7 +122,8 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # basically, the cost is set as getCostOfActions() for every node we add to the priority queue
+    return search(problem, util.PriorityQueueWithFunction(lambda x: problem.getCostOfActions(x.getSolution())))
 
 
 def nullHeuristic(state, problem=None):
@@ -136,7 +137,8 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # the cost is set as getCostOfActions()+ heuristic() for every node we add to the priority queue
+    return search(problem, util.PriorityQueueWithFunction(lambda x: problem.getCostOfActions(x.getSolution()) + heuristic(x.state, problem)))
 
 
 def search(problem, frontier):
@@ -167,9 +169,9 @@ def search(problem, frontier):
         else:
             # added successor states to the frontier
             for successor in problem.getSuccessors(node.state):
-                child = Node(successor[0], node, successor[1], 0)
+                child = Node(successor[0], node, successor[1], successor[2])
                 frontier.push(child)
-
+    # FIXME: the code can be somewhat improved by 1) not adding duplicates to the frontier 2) updating better cost priority queque states
 
 # Abbreviations
 bfs = breadthFirstSearch
