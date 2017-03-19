@@ -146,6 +146,7 @@ class GameState:
         return self.data.agentStates[0].copy()
 
     def getPacmanPosition(self):
+        # type: () -> object
         return self.data.agentStates[0].getPosition()
 
     def getGhostStates(self):

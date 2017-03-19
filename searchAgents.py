@@ -305,14 +305,16 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # the state is a 2-tuple which contains the position and the unexplored corners
+        return self.startingPosition, self.corners
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # we're done when there are no corners left unexplored
+        return not state[1]
 
     def getSuccessors(self, state):
         """
@@ -325,17 +327,24 @@ class CornersProblem(search.SearchProblem):
             is the incremental cost of expanding to that successor
         """
 
+        "*** YOUR CODE HERE ***"
+        DEFAULT_COST = 1  # the cost to move from one state to the next
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
+            x, y = state[0]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
 
-            "*** YOUR CODE HERE ***"
-
+            if not hitsWall:
+                # if no walls are hit - it's a valid successor state
+                successorPosition = nextx, nexty
+                # get all corners, except the ones already visited up to, and including, the next node
+                successorUnexploredCorners = filter(lambda cornerPosition: not cornerPosition == successorPosition, state[1])
+                # a successor is a 3-tuple of the form ((position, unexplored_corners), action, cost)
+                successors.append(((successorPosition, successorUnexploredCorners), action, DEFAULT_COST))
         self._expanded += 1  # DO NOT CHANGE
         return successors
 
@@ -370,7 +379,26 @@ def cornersHeuristic(state, problem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0  # Default to trivial solution
+
+    # my heuristic is the sum of shortest manhattan distances between pacman and the goal (i.e corners)
+    # it's admissible because it will always be less or equal to the actual shortest path
+    # it's consistent because it upholds the following for any two pacman positions N,P: h(N) <= c(N,P) + h(P), h(G) = 0
+    # pacman moves in a manhattan-esque manner, so the manhattan distance is a tighter bound than euclidean distance
+
+    sumOfMinDistances = 0
+    uncheckedCorners = state[1]
+    # we first need to find the shortest distance between pacman and the corners
+    position = state[0]
+
+    while uncheckedCorners:
+        # get the minimum distance between current position and unchecked corners,
+        (minDistance, position) = min(map(lambda x: (util.manhattanDistance(position, x), x), uncheckedCorners))
+        # remove the position we just checked from unchecked corners
+        uncheckedCorners = filter(lambda x: x != position, uncheckedCorners)
+        # add to sum of shortest path distances
+        sumOfMinDistances += minDistance
+
+    return sumOfMinDistances
 
 
 class AStarCornersAgent(SearchAgent):
@@ -471,7 +499,21 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+
+    # let's try to do the same thing we did in corners
+
+    sumOfMinDistances = 0
+    uncheckedFoods = foodGrid.asList()
+
+    while uncheckedFoods:
+        # get the minimum distance between current position and unchecked corners,
+        (minDistance, position) = min(map(lambda x: (util.manhattanDistance(position, x), x), uncheckedFoods))
+        # remove the position we just checked from unchecked corners
+        uncheckedFoods = filter(lambda x: x != position, uncheckedFoods)
+        # add to sum of shortest path distances
+        sumOfMinDistances += minDistance
+
+    return sumOfMinDistances
 
 
 class ClosestDotSearchAgent(SearchAgent):

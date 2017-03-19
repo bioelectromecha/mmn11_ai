@@ -30,4 +30,7 @@ python pacman.py -l openMaze -p SearchAgent -a fn=ucs
 python pacman.py -l openMaze -p SearchAgent -a fn=bfs
 python pacman.py -l openMaze -p SearchAgent
 
+python pacman.py -l mediumSearch -p AStarFoodSearchAgent
+
+
 
