@@ -33,11 +33,10 @@ description for details.
 
 Good luck and happy searching!
 """
-
+import util
 from game import Directions
 from game import Agent
 from game import Actions
-import util
 import time
 import search
 
@@ -336,6 +335,7 @@ class CornersProblem(search.SearchProblem):
             x, y = state[0]
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
+
             hitsWall = self.walls[nextx][nexty]
 
             if not hitsWall:
@@ -346,6 +346,7 @@ class CornersProblem(search.SearchProblem):
                 # a successor is a 3-tuple of the form ((position, unexplored_corners), action, cost)
                 successors.append(((successorPosition, successorUnexploredCorners), action, DEFAULT_COST))
         self._expanded += 1  # DO NOT CHANGE
+
         return successors
 
     def getCostOfActions(self, actions):
@@ -379,26 +380,13 @@ def cornersHeuristic(state, problem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-
-    # my heuristic is the sum of shortest manhattan distances between pacman and the goal (i.e corners)
-    # it's admissible because it will always be less or equal to the actual shortest path
-    # it's consistent because it upholds the following for any two pacman positions N,P: h(N) <= c(N,P) + h(P), h(G) = 0
-    # pacman moves in a manhattan-esque manner, so the manhattan distance is a tighter bound than euclidean distance
-
-    sumOfMinDistances = 0
-    uncheckedCorners = state[1]
-    # we first need to find the shortest distance between pacman and the corners
-    position = state[0]
-
-    while uncheckedCorners:
-        # get the minimum distance between current position and unchecked corners,
-        (minDistance, position) = min(map(lambda x: (util.manhattanDistance(position, x), x), uncheckedCorners))
-        # remove the position we just checked from unchecked corners
-        uncheckedCorners = filter(lambda x: x != position, uncheckedCorners)
-        # add to sum of shortest path distances
-        sumOfMinDistances += minDistance
-
-    return sumOfMinDistances
+    # The heuristic I chose is the path manhattan distance sum of the minimum spanning tree of the corners + pacman's position
+    # It's both admissible and consistent - admissible because the MST will always be less than actual traveled path
+    # It's consistent because it's a simplification of the original problem (no obstacles, no revisting of explored nodes)
+    # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
+    allPositions = [state[0]] + list(state[1])
+    # return the sum of edge costs in a minimum spanning tree of the graph
+    return calcShortestPathsLengthSum(allPositions)
 
 
 class AStarCornersAgent(SearchAgent):
@@ -499,21 +487,12 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-
-    # let's try to do the same thing we did in corners
-
-    sumOfMinDistances = 0
-    uncheckedFoods = foodGrid.asList()
-
-    while uncheckedFoods:
-        # get the minimum distance between current position and unchecked corners,
-        (minDistance, position) = min(map(lambda x: (util.manhattanDistance(position, x), x), uncheckedFoods))
-        # remove the position we just checked from unchecked corners
-        uncheckedFoods = filter(lambda x: x != position, uncheckedFoods)
-        # add to sum of shortest path distances
-        sumOfMinDistances += minDistance
-
-    return sumOfMinDistances
+    # The heuristic I chose is the path manhattan distance sum of the minimum spanning tree of the corners + pacman's position
+    # It's both admissible and consistent - admissible because the MST will always be less than actual traveled path
+    # It's consistent because it's a simplification of the original problem (no obstacles, no revisting of explored nodes)
+    # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
+    allPositions = [state[0]] + state[1].asList()
+    return calcShortestPathsLengthSum(allPositions)
 
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -546,7 +525,8 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # find the shortest path to the nearest food
+        return search.breadthFirstSearch(problem)
 
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -583,8 +563,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x, y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        # true if we've reached a food
+        return self.food[x][y]
 
 def mazeDistance(point1, point2, gameState):
     """
@@ -603,3 +583,48 @@ def mazeDistance(point1, point2, gameState):
     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
+
+
+def calcShortestPathsLengthSum(positions):
+    """ 
+    :param positions: a list of positions (x,y) pacman should go reach
+    :return: the sum of path lengths in a minimum spanning tree
+    """
+    # we use Kruskal's algorithm to calculate the minimum spanning tree
+    # step 1) put all the edges and in the graph, with their cost, into a list of tuples (cost, vertice1, vertice2)
+
+    if len(positions) <= 1:
+        return 0
+
+    edgeList = []
+    # add all possible graph edges and their cost to the list
+    while positions:
+        state = positions[0]
+        del positions[0]
+        # add all the edges from leading from the current state to all the other states
+        edgeList.extend(map(lambda x: (util.manhattanDistance(state, x), state, x), positions))
+
+    # calculate a list of edges in a min spanning tree
+    minSpanningTreeEdgeList = calcMinSpanningTree(edgeList)
+
+    # return the sum of edge costs in the MST
+    return sum(edge[0] for edge in minSpanningTreeEdgeList)
+
+
+def calcMinSpanningTree(edgeList):
+    """ calculate a minimum spanning tree list of edges via Kruskal's algorithm"""
+
+    # sort the list of edges by their cost
+    edgeList = sorted(edgeList)
+
+    explored = set() # a set of vertices for which a shortest path was already calculated
+    minSpanningTreeEdgeList = []
+
+    # build the minimum spanning tree - we rely on edgeList being sorted by cost
+    for edge in edgeList:
+        # don't add elements which
+        if edge[2] not in explored:
+            minSpanningTreeEdgeList.append(edge)
+            explored.add(edge[2])
+
+    return minSpanningTreeEdgeList

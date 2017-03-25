@@ -93,7 +93,6 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return [s, s, w, s, w, w, s, w]
 
-
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -109,6 +108,7 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
+    # doesn't necessarily find the shortest path
     # a graph search with the frontier as a Stack data-structure will yield DFS
     return search(problem, util.Stack())
 
@@ -116,6 +116,7 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+    # does find the shortest path
     return search(problem, util.Queue())
 
 
@@ -171,7 +172,6 @@ def search(problem, frontier):
             for successor in problem.getSuccessors(node.state):
                 child = Node(successor[0], node, successor[1], successor[2])
                 frontier.push(child)
-    # FIXME: the code can be somewhat improved by 1) not adding duplicates to the frontier 2) updating better cost priority queque states
 
 # Abbreviations
 bfs = breadthFirstSearch
