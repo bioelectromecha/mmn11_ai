@@ -4,9 +4,6 @@ Q.1 - it's not the best possible solution. DFS returns the first solution it fin
     That's because it doesn't check all successor states from a given starting state.
     As a consequence, in MediumMaze it misses a somewhat shorter path to the goal.
 
-Q.2 -
-
-Q.3 -
 
 Q.4 - It looks like A* with manhattan heuristic got the shortest path in the shortest time (compared to UCS and BFS).
     On the other hand, DFS got a path in the overall shortest time, but the path it found was suboptimal.

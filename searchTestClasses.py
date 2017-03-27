@@ -32,7 +32,7 @@ def wrap_solution(solution):
 
 
 def followAction(state, action, problem):
-  for successor1, action1, cost1 in problem.get_successor_nodes(state):
+  for successor1, action1, cost1 in problem.getSuccessors(state):
     if action == action1: return successor1
   return None
 
@@ -500,7 +500,7 @@ class HeuristicTest(testClasses.TestCase):
         if not h0 <= solutionCost:
             return False, 'Heuristic failed admissibility test'
 
-        for succ, action, stepCost in problem.get_successor_nodes(state):
+        for succ, action, stepCost in problem.getSuccessors(state):
             h1 = heuristic(succ, problem)
             if h1 < 0: return False, 'Heuristic failed H >= 0 test'
             if h0 - h1 > stepCost: return False, 'Heuristic failed consistency test'
@@ -697,7 +697,7 @@ class CornerHeuristicSanity(testClasses.TestCase):
         problem = searchAgents.CornersProblem(game_state)
         start_state = problem.getStartState()
         h0 = searchAgents.cornersHeuristic(start_state, problem)
-        succs = problem.get_successor_nodes(start_state)
+        succs = problem.getSuccessors(start_state)
         # cornerConsistencyA
         for succ in succs:
             h1 = searchAgents.cornersHeuristic(succ[0], problem)

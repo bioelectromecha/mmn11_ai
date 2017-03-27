@@ -491,6 +491,7 @@ def foodHeuristic(state, problem):
     # It's both admissible and consistent - admissible because the MST will always be less than actual traveled path
     # It's consistent because it's a simplification of the original problem (no obstacles, no revisting of explored nodes)
     # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
+    # if pacman moves closer to the foods - the heuristic will be
     allPositions = [state[0]] + state[1].asList()
     return calcShortestPathsLengthSum(allPositions)
 
@@ -563,7 +564,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x, y = state
 
         "*** YOUR CODE HERE ***"
-        # true if we've reached a food
+        # true if we've reached a food item
         return self.food[x][y]
 
 def mazeDistance(point1, point2, gameState):
@@ -626,5 +627,4 @@ def calcMinSpanningTree(edgeList):
         if edge[2] not in explored:
             minSpanningTreeEdgeList.append(edge)
             explored.add(edge[2])
-
     return minSpanningTreeEdgeList
