@@ -386,7 +386,8 @@ def cornersHeuristic(state, problem):
     # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
     allPositions = [state[0]] + list(state[1])
     # return the sum of edge costs in a minimum spanning tree of the graph
-    return calcShortestPathsLengthSum(allPositions)
+    x = calcShortestPathsLengthSum(allPositions)
+    return x
 
 
 class AStarCornersAgent(SearchAgent):
@@ -604,6 +605,7 @@ def calcShortestPathsLengthSum(positions):
         del positions[0]
         # add all the edges from leading from the current state to all the other states
         edgeList.extend(map(lambda x: (util.manhattanDistance(state, x), state, x), positions))
+        edgeList.extend(map(lambda x: (util.manhattanDistance(state, x), x, state), positions))
 
     # calculate a list of edges in a min spanning tree
     minSpanningTreeEdgeList = calcMinSpanningTree(edgeList)
@@ -619,6 +621,7 @@ def calcMinSpanningTree(edgeList):
     edgeList = sorted(edgeList)
 
     explored = set() # a set of vertices for which a shortest path was already calculated
+    explored.add(edgeList[0][2])
     minSpanningTreeEdgeList = []
 
     # build the minimum spanning tree - we rely on edgeList being sorted by cost
