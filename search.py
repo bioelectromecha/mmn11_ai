@@ -148,7 +148,6 @@ def search(problem, frontier):
         depending on type of given frontier data structure
         :param frontier must be empty!
     """
-
     node = Node(problem.getStartState(), None, None, 0)
     if problem.isGoalState(node.state):
         return node.getSolution()

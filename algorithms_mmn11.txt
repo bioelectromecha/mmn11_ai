@@ -129,7 +129,49 @@ Overall the algorithm has a time complexity of O(m)
 
 Question 4
 
+Overview
 
+Divide G into 2 components: U, and W=V/U.
+Construct a new graph such as to allow BFS to scan nodes more than once while still reaching the goal state and ensure termination.
+
+Pseudo-code
+
+FIND-2U-SHORTEST-PATH( G=(V,E), U)
+    init an empty directed graph H
+    init 5 empty sub-graphs of H: W_1, U_1, W_2, U_2, W_3
+    for each vertex v in G:
+       if v is in U:
+            add 2 copies of v to H: v_1 to U_1, v_2 to U_2
+       else:
+            add 3 copies of v to H: v_1 to W_1, v_2 to W_2, v_3 to W_3
+    for each edge e in G:
+        if e is an edge from V/U to U:
+            add it as an edge from W_1 to U_1, and from W_2 to U_2
+        if e is an edge from U to U:
+            add it as an edge from U_1 to U_2
+        if e is an edge from U to V/U:
+            add it as an edge from U_1 to W_2, and from U_2 to W_3
+        if e is an edge from V/U to V/U:
+            add it as an edge from each of W_1, W_2, W_3, to itself.
+    start a BFS scan to find a path from W_1.s to W_3.t
+    if such a path doesn't exist:
+        return false
+    else:
+        return the path found by BFS
+
+
+Correctness
+1) The returned path passes through U exactly twice. U_1, U_2 have no internal edges and there's no cycle between the sub-graphs.
+    Therefore, a path from W_1 to W_3 will pass through U_1 exactly once and U_2 exactly once.
+
+2) The returned path is the shortest path. It's a property of BFS when searching through an unweighted graph.
+
+3) The returned path is a valid path through G. Every edge in H is an edge in G and every vertex in H is a vertex in G.
+
+Complexity
+Building the graph H with its sub-graphs - O(n+m)
+Finding the shortest path - O(m+n)
+Overall the algorithm runs in O(m+n) time.
 
 
 

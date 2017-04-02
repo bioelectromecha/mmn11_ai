@@ -392,7 +392,7 @@ class GameStateData:
         """
         Generates a new data packet by copying information from its predecessor.
         """
-        if prevState != None:
+        if prevState is not None:
             self.food = prevState.food.shallowCopy()
             self.capsules = prevState.capsules[:]
             self.agentStates = self.copyAgentStates(prevState.agentStates)

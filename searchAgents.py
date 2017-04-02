@@ -297,6 +297,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.heuristicInfo = {}
 
     def getStartState(self):
         """
@@ -384,10 +385,13 @@ def cornersHeuristic(state, problem):
     # It's both admissible and consistent - admissible because the MST will always be less than actual traveled path
     # It's consistent because it's a simplification of the original problem (no obstacles, no revisting of explored nodes)
     # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
+    gameState = problem.heuristicInfo.get('gameState', None)
+    if gameState is None:
+        gameState = SimpleGameState(state[0], walls)
+        problem.heuristicInfo['gameState'] = gameState
     allPositions = [state[0]] + list(state[1])
     # return the sum of edge costs in a minimum spanning tree of the graph
-    x = calcShortestPathsLengthSum(allPositions)
-    return x
+    return getMazeDistanceBetweenFarthestPoints(allPositions,gameState, problem.heuristicInfo)
 
 
 class AStarCornersAgent(SearchAgent):
@@ -493,8 +497,12 @@ def foodHeuristic(state, problem):
     # It's consistent because it's a simplification of the original problem (no obstacles, no revisting of explored nodes)
     # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
     # if pacman moves closer to the foods - the heuristic will be
+    gameState = problem.heuristicInfo.get('gameState', None)
+    if gameState is None:
+        gameState = SimpleGameState(position, problem.walls)
+        problem.heuristicInfo['gameState'] = gameState
     allPositions = [state[0]] + state[1].asList()
-    return calcShortestPathsLengthSum(allPositions)
+    return getMazeDistanceBetweenFarthestPoints(allPositions, gameState, problem.heuristicInfo)
 
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -586,48 +594,28 @@ def mazeDistance(point1, point2, gameState):
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
 
-
-def calcShortestPathsLengthSum(positions):
-    """ 
-    :param positions: a list of positions (x,y) pacman should go reach
-    :return: the sum of path lengths in a minimum spanning tree
-    """
-    # we use Kruskal's algorithm to calculate the minimum spanning tree
-    # step 1) put all the edges and in the graph, with their cost, into a list of tuples (cost, vertice1, vertice2)
-
-    if len(positions) <= 1:
-        return 0
-
-    edgeList = []
-    # add all possible graph edges and their cost to the list
-    while positions:
-        state = positions[0]
-        del positions[0]
-        # add all the edges from leading from the current state to all the other states
-        edgeList.extend(map(lambda x: (util.manhattanDistance(state, x), state, x), positions))
-        edgeList.extend(map(lambda x: (util.manhattanDistance(state, x), x, state), positions))
-
-    # calculate a list of edges in a min spanning tree
-    minSpanningTreeEdgeList = calcMinSpanningTree(edgeList)
-
-    # return the sum of edge costs in the MST
-    return sum(edge[0] for edge in minSpanningTreeEdgeList)
+def getMazeDistanceBetweenFarthestPoints(points, gameState, heuristicInfo):
+    maxPathLength = 0
+    while points:
+        point = points[-1]
+        del points[-1]
+        for otherPoint in points:
+            pathLength = heuristicInfo.get((point,otherPoint), None)
+            if pathLength is None:
+                pathLength = mazeDistance(point, otherPoint, gameState)
+                heuristicInfo[(point, otherPoint)] = pathLength
+            if maxPathLength < pathLength:
+                maxPathLength = pathLength
+    return maxPathLength
 
 
-def calcMinSpanningTree(edgeList):
-    """ calculate a minimum spanning tree list of edges via Kruskal's algorithm"""
+class SimpleGameState:
+    def __init__(self, pacmanPosition, walls):
+        self.walls = walls
+        self.pacmanPosition = pacmanPosition
 
-    # sort the list of edges by their cost
-    edgeList = sorted(edgeList)
+    def getWalls(self):
+        return self.walls
 
-    explored = set() # a set of vertices for which a shortest path was already calculated
-    explored.add(edgeList[0][2])
-    minSpanningTreeEdgeList = []
-
-    # build the minimum spanning tree - we rely on edgeList being sorted by cost
-    for edge in edgeList:
-        # don't add elements which
-        if edge[2] not in explored:
-            minSpanningTreeEdgeList.append(edge)
-            explored.add(edge[2])
-    return minSpanningTreeEdgeList
+    def getPacmanPosition(self):
+        return self.pacmanPosition
