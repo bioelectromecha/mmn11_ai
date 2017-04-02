@@ -297,6 +297,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        # save stuff for the heuristic
         self.heuristicInfo = {}
 
     def getStartState(self):
@@ -381,16 +382,12 @@ def cornersHeuristic(state, problem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    # The heuristic I chose is the path manhattan distance sum of the minimum spanning tree of the corners + pacman's position
-    # It's both admissible and consistent - admissible because the MST will always be less than actual traveled path
-    # It's consistent because it's a simplification of the original problem (no obstacles, no revisting of explored nodes)
-    # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
+    # See food heuristic for admissibility explanation
     gameState = problem.heuristicInfo.get('gameState', None)
     if gameState is None:
         gameState = SimpleGameState(state[0], walls)
-        problem.heuristicInfo['gameState'] = gameState
+        problem.heuristicInfo['gameState'] = gameState # save stuff to dictionary to reduce run time
     allPositions = [state[0]] + list(state[1])
-    # return the sum of edge costs in a minimum spanning tree of the graph
     return getMazeDistanceBetweenFarthestPoints(allPositions,gameState, problem.heuristicInfo)
 
 
@@ -492,11 +489,11 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    # The heuristic I chose is the path manhattan distance sum of the minimum spanning tree of the corners + pacman's position
-    # It's both admissible and consistent - admissible because the MST will always be less than actual traveled path
-    # It's consistent because it's a simplification of the original problem (no obstacles, no revisting of explored nodes)
-    # and more directly, because the MST path length sum upholds h(n) <= c(n,n') + h(n'), h(g) = 0
-    # if pacman moves closer to the foods - the heuristic will be
+    # This heuristic calculates the distance between two farthest points in the maze (including pacman himself!)
+    # It's consistent because it's the same problem with many constraints removed: instead of requiring a shortest path through
+    # all vertices, we reduce the problem to finding a path between just the two farthest ones.
+    # It's admissible because it's consistent
+
     gameState = problem.heuristicInfo.get('gameState', None)
     if gameState is None:
         gameState = SimpleGameState(position, problem.walls)
@@ -594,22 +591,31 @@ def mazeDistance(point1, point2, gameState):
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
 
+
 def getMazeDistanceBetweenFarthestPoints(points, gameState, heuristicInfo):
+    """ return the actual distance in the maze between the two farthest points"""
     maxPathLength = 0
+    # compare all points against all the other points - remove a checked points each time
     while points:
         point = points[-1]
         del points[-1]
+        # compare against all the other points
         for otherPoint in points:
+            # save states in a dictionary to improve running time
             pathLength = heuristicInfo.get((point,otherPoint), None)
             if pathLength is None:
+                # calc the actual distance from point to otherPoint
                 pathLength = mazeDistance(point, otherPoint, gameState)
+                # save to dictionary to avoid recalculating next time
                 heuristicInfo[(point, otherPoint)] = pathLength
             if maxPathLength < pathLength:
+                # set the new maximum
                 maxPathLength = pathLength
     return maxPathLength
 
 
 class SimpleGameState:
+    """ a custom lightweight state class, holds only pacmans position and the walls"""
     def __init__(self, pacmanPosition, walls):
         self.walls = walls
         self.pacmanPosition = pacmanPosition
